@@ -36,19 +36,16 @@ Using handle 93507538637076 in Room 1234
 subscribes to: <br/>
 Using handle 1078904380005661 in  Room 1234 to SnowWhite with ID 464261124587590 PvtID 2492745038
 
-Listeners:
-
-
+Listeners: <br/>
 User: Display SnowWhite ID 464261124587590 PvtID 3062447485  Session 4711353647645573
 
-publishes:
+publishes:<br/>
 
 Using handle 3254409020427425 in Room 1234
 
-subscribes to:
+subscribes to:<br/>
 
-Listeners:
-
+Listeners:<br/>
 reindeer listens on SnowWhite
 
 
