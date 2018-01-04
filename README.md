@@ -1,6 +1,10 @@
 # JanusCapture
 Example how to capture and parse Janus information by golang using its web-based admin interface. 
 
+## About Janus
+Janus is a WebRTC framework at https://github.com/meetecho/janus-gateway
+
+
 # Prerequisits
 Golang environment
 Get jsong json query utility
