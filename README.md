@@ -31,6 +31,7 @@ User: Display reindeer ID 3823503906827241 PvtID 2492745038  Session 21395429487
 publishes:
 Using handle 93507538637076 in Room 1234
 subscribes to:
+
 Using handle 1078904380005661 in  Room 1234 to SnowWhite with ID 464261124587590 PvtID 2492745038
 Listeners:
 
