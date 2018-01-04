@@ -1,10 +1,17 @@
 # JanusCapture
 Example how to capture and parse Janus information by golang using its web-based admin interface. 
 
+# Prerequisits
+Golang environment
+Get jsong json query utility
+$ go get github.com/jmoiron/jsonq
 
-Example usage
+# Example usage
 
-$ go get 
+$ git hub clone MalinYamato/JanusCapture
+$ go run capture.go
+
+# -- sample ouput
 https://media.raku.cloud:7889/admin
 https://media.raku.cloud:7889/admin/619673961686304
 https://media.raku.cloud:7889/admin/619673961686304/5512276229560844
