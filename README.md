@@ -30,6 +30,7 @@ https://media.raku.cloud:7889/admin/4711353647645573/3254409020427425
 User: Display reindeer ID 3823503906827241 PvtID 2492745038  Session 2139542948799017
 
 publishes:
+
 Using handle 93507538637076 in Room 1234
 
 subscribes to:
