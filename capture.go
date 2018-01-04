@@ -41,6 +41,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"strings"
+
 )
 
 const http_server  = "http://media.raku.cloud:7088"
@@ -68,26 +69,20 @@ type JanusHandles struct {
 
 
 type handleID int
-type privateID int
 
-type Publishment struct
-{
-	RoomID    int
-//	Audio     bool  // NOT in use
-//  Video     bool  // NOT in use
+type Publishment struct {
+	RoomID int
 }
 type Subscription struct {
 	RoomID    int
 	ID        int        //subscriber
 	Display   string     //display of subscriber
 	HandleID  handleID
-	PrivateID privateID  //owner of feed
-//	Audio     bool       // NOT in use
-//	Video     bool       // NOT in use
+	PrivateID int //owner of feed
 }
 type MediaUser struct {
 	 ID            int
-	 PrivateID     privateID
+	 PrivateID     int
 	 Display       string
 	 SessionID     int
 	 Publishments  map[handleID]Publishment
@@ -103,11 +98,11 @@ func (mus *MediaUsers) findByDisplay(display string) (MediaUser, bool) {
 func (mus *MediaUsers) update(mu MediaUser) {
 	mus.__mus[mu.Display] = mu
 }
-func (mus *MediaUsers) listeners(mu MediaUser) ([]MediaUser) {
+func (mus *MediaUsers) listenersOf(display string) ([]MediaUser) {
 	result := []MediaUser{}
 	for _, mediaUser := range mus.__mus {
 		for _, aSubby := range mediaUser.Subscriptions {
-			if aSubby.PrivateID == mu.PrivateID {
+			if aSubby.Display == display {
 				result = append(result, mediaUser)
 			}
 		}
@@ -127,7 +122,7 @@ func getDocument(mess string, path string) (r *http.Response) {
 }
 func main () {
 
-	mediaUsers := MediaUsers{ map[string]MediaUser{}}
+	publishers := MediaUsers{ map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
 
 	var sessions JanusSessions
@@ -152,39 +147,34 @@ func main () {
 			jq := jsonq.NewQuery(data)
 			pubsub, _ := jq.String("info", "plugin_specific", "type")
 			if (pubsub == "publisher") {
-				id, _ := jq.Int("info", "plugin_specific", "private_id")
-				private_id := privateID(id)
 				display, _ := jq.String("info", "plugin_specific", "display")
 				var aPublisher MediaUser
-				_, ok := mediaUsers.findByDisplay(display)
-				if ! ok {
-					aPublisher := MediaUser{}
-					aPublisher.Publishments = map[handleID]Publishment{}
-					aPublisher.SessionID, _ = jq.Int("session_id")
-					aPublisher.Display = display
-					aPublisher.ID, _ = jq.Int("info", "plugin_specific", "id")
-					aPublisher.PrivateID = private_id
-					mediaUsers.update(aPublisher)
-				}
-				aPublisher, _ = mediaUsers.findByDisplay(display)
 				_, err := jq.Int("info", "streams", "0", "id")
 				if err != nil {
-					fmt.Println("no publishing streams")
+					fmt.Println("no streams")
 				} else {
 					// the publisher is broadcasting
-					room, _ := jq.Int("info", "plugin_specific", "room")
-					id, _ = jq.Int("handle_id")
-					handle_id := handleID(id)
-					aPublisher.Publishments[handle_id] = Publishment{room}
-				}
-				mediaUsers.update(aPublisher)
+					_, ok := publishers.findByDisplay(display)
+					if ! ok {
+						aPublisher := MediaUser{}
+						aPublisher.Display = display
+						aPublisher.Publishments = map[handleID]Publishment{}
+						publishers.update(aPublisher)
 
+					}
+					aPublisher, _ = publishers.findByDisplay(display)
+					aPublisher.SessionID, _ = jq.Int("session_id")
+					aPublisher.ID, _ = jq.Int("info", "plugin_specific", "id")
+					aPublisher.PrivateID, _ = jq.Int("info", "plugin_specific", "private_id")
+					id, _ := jq.Int("handle_id")
+					handle_id := handleID(id)
+					room, _ := jq.Int("info", "plugin_specific", "room")
+					aPublisher.Publishments[handle_id] = Publishment{room}
+					publishers.update(aPublisher)
+				}
 			} else if (pubsub == "listener") {
 				id, _ := jq.Int("handle_id")
 				handle_id := handleID(id)
-				id, _ = jq.Int("info", "plugin_specific", "private_id")
-				private_id := privateID(id)
-
 				_, err := jq.Int("info", "streams", "0", "id")
 				if err != nil {
 					// the listener is not listening
@@ -194,31 +184,30 @@ func main () {
 					if ! ok {
 						subscriptions[handle_id] = Subscription{}
 					}
-					room, _ := jq.Int("info", "plugin_specific", "room")
 					subby := subscriptions[handle_id]
-					subby.RoomID = room
-					subby.PrivateID = private_id
+					subby.RoomID, _  = jq.Int("info", "plugin_specific", "room")
+					subby.PrivateID, _ = jq.Int("info", "plugin_specific", "private_id")
 					subby.ID, _ = jq.Int("info", "plugin_specific", "feed_id")
-					subby.Display, _ = jq.String("info", "plugin_specific", "feed_display")
+			 		subby.Display, _ = jq.String("info", "plugin_specific", "feed_display")
 					subby.HandleID = handle_id
 					subscriptions[handle_id] = subby
 				}
 			}
 		}
 	}
-	for _, user := range mediaUsers.__mus {
+	for _, user := range publishers.__mus {
 		for _, subby := range subscriptions {
 			if user.PrivateID == subby.PrivateID {
 				if (user.Subscriptions == nil) {
 					user.Subscriptions = map[handleID]Subscription{}
 				}
 				user.Subscriptions[subby.HandleID] = subby
-				mediaUsers.update(user)
+				publishers.update(user)
 			}
 		}
 	}
 
-	for _, user := range mediaUsers.__mus {
+	for _, user := range publishers.__mus {
 		fmt.Print("User: ")
 		fmt.Printf("Display %s ID %d PvtID %d  Session %d\n",user.Display, user.ID, user.PrivateID, user.SessionID )
 		fmt.Println("publishes: ")
@@ -229,8 +218,14 @@ func main () {
 		for s, sub := range user.Subscriptions {
 			fmt.Printf("Using handle %d in  Room %d to %s with ID %d PvtID %d\n", s, sub.RoomID, sub.Display, sub.ID, sub.PrivateID)
 		}
+		fmt.Println("Listeners: ")
+		listeners :=  publishers.listenersOf(user.Display)
+		for l := 0; l < len(listeners); l++ {
+			fmt.Println( listeners[l].Display + " listens on " + user.Display)
+		}
       fmt.Println()
 	}
+
 
 //	fmt.Println(mediaUsers)
 //	fmt.Println(subscriptions)
