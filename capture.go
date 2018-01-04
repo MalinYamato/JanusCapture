@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"encoding/json"
 	"bytes"
-
 	"fmt"
-
 	"strconv"
 	"io/ioutil"
 	"strings"
-
 )
+
+const http_server  = "http://media.raku.cloud:7088"
+const encrypted_server = "https://media.raku.cloud:7889"
+const server = encrypted_server
 
 type JanusRequest struct {
 	Janus string        `json:"janus"`
@@ -34,13 +35,6 @@ type JanusHandles struct {
 	Handles    []int    `json:"handles"`
 }
 
-func getDocument(url string, message JanusRequest) (r *http.Response) {
-	fmt.Println(url)
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(message)
-	res, _ := http.Post(url, "application/json; charset=utf-8", b)
-	return res
-}
 
 type handleID int
 type privateID int
@@ -57,8 +51,8 @@ type Subscription struct {
 	Display   string     //display of subscriber
 	HandleID  handleID
 	PrivateID privateID  //owner of feed
-//	Audio     bool  // NOT in use
-//	Video     bool  // NOT in use
+//	Audio     bool       // NOT in use
+//	Video     bool       // NOT in use
 }
 type MediaUser struct {
 	 ID            int
@@ -90,13 +84,18 @@ func (mus *MediaUsers) listeners(mu MediaUser) ([]MediaUser) {
 	return result
 }
 
-
+func getDocument(url string, message JanusRequest) (r *http.Response) {
+	fmt.Println(url)
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(message)
+	res, _ := http.Post(url, "application/json; charset=utf-8", b)
+	return res
+}
 func main () {
-
 	mediaUsers := MediaUsers{ map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
 
-	url := "https://media.raku.cloud:7889/admin"
+	url := server + "/admin"
 	message := JanusRequest{Janus: "list_sessions", Transation: "123", Secret: "janusoverlord"}
 	var res= getDocument(url, message)
 	var sessions JanusSessions
@@ -166,7 +165,6 @@ func main () {
 					if ! ok {
 						subscriptions[handle_id] = Subscription{}
 					}
-
 					room, _ := jq.Int("info", "plugin_specific", "room")
 					id, _ = jq.Int("handle_id")
 					handle_id := handleID(id)
@@ -181,8 +179,6 @@ func main () {
 			}
 		}
 	}
-
-
 	for _, user := range mediaUsers.__mus {
 		for _, subby := range subscriptions {
 			if user.PrivateID == subby.PrivateID {
