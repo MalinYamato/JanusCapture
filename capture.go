@@ -221,8 +221,4 @@ func main() {
 		}
 		fmt.Println()
 	}
-
-	//	fmt.Println(mediaUsers)
-	//	fmt.Println(subscriptions)
-
 }
