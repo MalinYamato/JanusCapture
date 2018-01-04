@@ -15,7 +15,8 @@ $ go get github.com/jmoiron/jsonq
 $ git hub clone MalinYamato/JanusCapture
 $ go run capture.go
 
-# -- sample ouput  reindeer and SnowWhite publishes, only reindeer watches SnowWhite
+# -- sample ouput
+###reindeer and SnowWhite publishes, only reindeer watches SnowWhite
 
 https://media.raku.cloud:7889/admin/
 https://media.raku.cloud:7889/admin/2139542948799017
