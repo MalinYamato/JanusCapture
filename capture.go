@@ -166,8 +166,6 @@ func main () {
 						subscriptions[handle_id] = Subscription{}
 					}
 					room, _ := jq.Int("info", "plugin_specific", "room")
-					id, _ = jq.Int("handle_id")
-					handle_id := handleID(id)
 					subby := subscriptions[handle_id]
 					subby.RoomID = room
 					subby.PrivateID = private_id
