@@ -132,7 +132,7 @@ func main () {
 					aPublisher := MediaUser{}
 					aPublisher.Publishments = map[handleID]Publishment{}
 					aPublisher.SessionID, _ = jq.Int("session_id")
-					aPublisher.Display, _ = jq.String("info", "plugin_specific", "display")
+					aPublisher.Display = display
 					aPublisher.ID, _ = jq.Int("info", "plugin_specific", "id")
 					aPublisher.PrivateID = private_id
 					mediaUsers.update(aPublisher)
