@@ -29,7 +29,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 package main
 
 import (
@@ -41,32 +40,28 @@ import (
 	"strconv"
 	"io/ioutil"
 	"strings"
-
 )
 
-const http_server  = "http://media.raku.cloud:7088"
+const http_server = "http://media.raku.cloud:7088"
 const encrypted_server = "https://media.raku.cloud:7889"
 const server = encrypted_server
 
 type JanusRequest struct {
-	Janus string        `json:"janus"`
-	Transation string   `json:"transaction"`
-	Secret     string   `json:"admin_secret"`
-
+	Janus      string `json:"janus"`
+	Transation string `json:"transaction"`
+	Secret     string `json:"admin_secret"`
 }
 type JanusSessions struct {
-	Janus      string   `json:"janus"`
-	Transation string   `json:"transaction"`
-	Sessions   []int    `json:"sessions"`
-
+	Janus      string `json:"janus"`
+	Transation string `json:"transaction"`
+	Sessions   []int  `json:"sessions"`
 }
 type JanusHandles struct {
-	Janus      string   `json:"janus"`
-	Transation string   `json:"transaction"`
-	Session    int      `json:"session"`
-	Handles    []int    `json:"handles"`
+	Janus      string `json:"janus"`
+	Transation string `json:"transaction"`
+	Session    int    `json:"session"`
+	Handles    []int  `json:"handles"`
 }
-
 
 type handleID int
 
@@ -75,22 +70,23 @@ type Publishment struct {
 }
 type Subscription struct {
 	RoomID    int
-	ID        int        //subscriber
-	Display   string     //display of subscriber
+	ID        int    //subscriber
+	Display   string //display of subscriber
 	HandleID  handleID
 	PrivateID int //owner of feed
 }
 type MediaUser struct {
-	 ID            int
-	 PrivateID     int
-	 Display       string
-	 SessionID     int
-	 Publishments  map[handleID]Publishment
-	 Subscriptions map[handleID]Subscription
+	ID            int
+	PrivateID     int
+	Display       string
+	SessionID     int
+	Publishments  map[handleID]Publishment
+	Subscriptions map[handleID]Subscription
 }
 type MediaUsers struct {
 	__mus map[string]MediaUser
 }
+
 func (mus *MediaUsers) findByDisplay(display string) (MediaUser, bool) {
 	mu, err := mus.__mus[display]
 	return mu, err
@@ -120,9 +116,9 @@ func getDocument(mess string, path string) (r *http.Response) {
 	res, _ := http.Post(url, "application/json; charset=utf-8", b)
 	return res
 }
-func main () {
+func main() {
 
-	publishers := MediaUsers{ map[string]MediaUser{}}
+	publishers := MediaUsers{map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
 
 	var sessions JanusSessions
@@ -133,13 +129,13 @@ func main () {
 	}
 	for i := 0; i < len(sessions.Sessions); i++ {
 		var handles JanusHandles
-		res := getDocument("list_handles",strconv.Itoa(sessions.Sessions[i]))
+		res := getDocument("list_handles", strconv.Itoa(sessions.Sessions[i]))
 		err := json.NewDecoder(res.Body).Decode(&handles)
 		if err != nil {
 			fmt.Println("err")
 		}
 		for h := 0; h < len(handles.Handles); h++ {
-			res = getDocument( "handle_info", strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]))
+			res = getDocument("handle_info", strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]))
 			body, _ := ioutil.ReadAll(res.Body)
 			data := map[string]interface{}{}
 			dec := json.NewDecoder(strings.NewReader(string(body)))
@@ -185,10 +181,10 @@ func main () {
 						subscriptions[handle_id] = Subscription{}
 					}
 					subby := subscriptions[handle_id]
-					subby.RoomID, _  = jq.Int("info", "plugin_specific", "room")
+					subby.RoomID, _ = jq.Int("info", "plugin_specific", "room")
 					subby.PrivateID, _ = jq.Int("info", "plugin_specific", "private_id")
 					subby.ID, _ = jq.Int("info", "plugin_specific", "feed_id")
-			 		subby.Display, _ = jq.String("info", "plugin_specific", "feed_display")
+					subby.Display, _ = jq.String("info", "plugin_specific", "feed_display")
 					subby.HandleID = handle_id
 					subscriptions[handle_id] = subby
 				}
@@ -209,7 +205,7 @@ func main () {
 
 	for _, user := range publishers.__mus {
 		fmt.Print("User: ")
-		fmt.Printf("Display %s ID %d PvtID %d  Session %d\n",user.Display, user.ID, user.PrivateID, user.SessionID )
+		fmt.Printf("Display %s ID %d PvtID %d  Session %d\n", user.Display, user.ID, user.PrivateID, user.SessionID)
 		fmt.Println("publishes: ")
 		for h, pub := range user.Publishments {
 			fmt.Printf("Using handle %d in Room %d \n", h, pub.RoomID)
@@ -219,15 +215,14 @@ func main () {
 			fmt.Printf("Using handle %d in  Room %d to %s with ID %d PvtID %d\n", s, sub.RoomID, sub.Display, sub.ID, sub.PrivateID)
 		}
 		fmt.Println("Listeners: ")
-		listeners :=  publishers.listenersOf(user.Display)
+		listeners := publishers.listenersOf(user.Display)
 		for l := 0; l < len(listeners); l++ {
-			fmt.Println( listeners[l].Display + " listens on " + user.Display)
+			fmt.Println(listeners[l].Display + " listens on " + user.Display)
 		}
-      fmt.Println()
+		fmt.Println()
 	}
 
-
-//	fmt.Println(mediaUsers)
-//	fmt.Println(subscriptions)
+	//	fmt.Println(mediaUsers)
+	//	fmt.Println(subscriptions)
 
 }
