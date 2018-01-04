@@ -15,34 +15,29 @@ $ go get github.com/jmoiron/jsonq
 $ git hub clone MalinYamato/JanusCapture
 $ go run capture.go
 
-# -- sample ouput
-https://media.raku.cloud:7889/admin
-https://media.raku.cloud:7889/admin/619673961686304
-https://media.raku.cloud:7889/admin/619673961686304/5512276229560844
-https://media.raku.cloud:7889/admin/619673961686304/1530691471704410
-https://media.raku.cloud:7889/admin/619673961686304/7906681006396276
-https://media.raku.cloud:7889/admin/619673961686304/7641305480430373
-https://media.raku.cloud:7889/admin/619673961686304/758916654973993
-no listening streams
-https://media.raku.cloud:7889/admin/619673961686304/7722166954917862
-https://media.raku.cloud:7889/admin/7242124950286414
-https://media.raku.cloud:7889/admin/7242124950286414/5129499908334239
-https://media.raku.cloud:7889/admin/7242124950286414/5104197395039627
-https://media.raku.cloud:7889/admin/7242124950286414/4731464721066429
+# -- sample ouput  reindeer and SnowWhite publishes, only reindeer watches SnowWhite
 
-User: Display reindeer ID 2070577706779277 PvtID 1803788641  Session 619673961686304
-publishes: 
-Using handle 1530691471704410 in Room 1234 
-subscribes to: 
-Using handle 5512276229560844 in  Room 1234 to reindeer with ID 2070577706779277 PvtID 1803788641
-Using handle 7722166954917862 in  Room 1234 to reindeer with ID 2070577706779277 PvtID 1803788641
+https://media.raku.cloud:7889/admin/
+https://media.raku.cloud:7889/admin/2139542948799017
+https://media.raku.cloud:7889/admin/2139542948799017/93507538637076
+https://media.raku.cloud:7889/admin/2139542948799017/6053503735469801
+https://media.raku.cloud:7889/admin/2139542948799017/1685459559131250
+https://media.raku.cloud:7889/admin/2139542948799017/1078904380005661
+https://media.raku.cloud:7889/admin/4711353647645573
+https://media.raku.cloud:7889/admin/4711353647645573/3254409020427425
+User: Display reindeer ID 3823503906827241 PvtID 2492745038  Session 2139542948799017
+publishes:
+Using handle 93507538637076 in Room 1234
+subscribes to:
+Using handle 1078904380005661 in  Room 1234 to SnowWhite with ID 464261124587590 PvtID 2492745038
+Listeners:
 
-User: Display fb ID 3702198787162993 PvtID 114761142  Session 7242124950286414
-publishes: 
-Using handle 5104197395039627 in Room 1234 
-subscribes to: 
-Using handle 5129499908334239 in  Room 1234 to reindeer with ID 2070577706779277 PvtID 114761142
-Using handle 4731464721066429 in  Room 1234 to fb with ID 3702198787162993 PvtID 114761142
+User: Display SnowWhite ID 464261124587590 PvtID 3062447485  Session 4711353647645573
+publishes:
+Using handle 3254409020427425 in Room 1234
+subscribes to:
+Listeners:
+reindeer listens on SnowWhite
 
 
 Process finished with exit code 0
