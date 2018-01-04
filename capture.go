@@ -115,7 +115,10 @@ func (mus *MediaUsers) listeners(mu MediaUser) ([]MediaUser) {
 	return result
 }
 
-func getDocument(url string, message JanusRequest) (r *http.Response) {
+func getDocument(mess string, path string) (r *http.Response) {
+	url := server + "/admin" + "/" + path
+	message := JanusRequest{Janus: mess, Transation: "123", Secret: "janusoverlord"}
+
 	fmt.Println(url)
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(message)
@@ -123,35 +126,30 @@ func getDocument(url string, message JanusRequest) (r *http.Response) {
 	return res
 }
 func main () {
+
 	mediaUsers := MediaUsers{ map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
 
-	url := server + "/admin"
-	message := JanusRequest{Janus: "list_sessions", Transation: "123", Secret: "janusoverlord"}
-	var res= getDocument(url, message)
 	var sessions JanusSessions
+	res := getDocument("list_sessions", "")
 	err := json.NewDecoder(res.Body).Decode(&sessions)
 	if err != nil {
 		fmt.Println("err")
 	}
 	for i := 0; i < len(sessions.Sessions); i++ {
 		var handles JanusHandles
-		message.Janus = "list_handles"
-		res = getDocument(url+"/"+strconv.Itoa(sessions.Sessions[i]), message)
+		res := getDocument("list_handles",strconv.Itoa(sessions.Sessions[i]))
 		err := json.NewDecoder(res.Body).Decode(&handles)
 		if err != nil {
 			fmt.Println("err")
 		}
 		for h := 0; h < len(handles.Handles); h++ {
-			message.Janus = "handle_info"
-			res = getDocument(url+"/"+strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]), message)
+			res = getDocument( "handle_info", strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]))
 			body, _ := ioutil.ReadAll(res.Body)
-			//fmt.Println(string(body))
 			data := map[string]interface{}{}
 			dec := json.NewDecoder(strings.NewReader(string(body)))
 			dec.Decode(&data)
 			jq := jsonq.NewQuery(data)
-			//fmt.Println(string(body))
 			pubsub, _ := jq.String("info", "plugin_specific", "type")
 			if (pubsub == "publisher") {
 				id, _ := jq.Int("info", "plugin_specific", "private_id")
