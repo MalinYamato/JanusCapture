@@ -48,7 +48,6 @@ const encrypted_server = "https://media.raku.cloud:7889"
 const server = encrypted_server
 var _debug = false
 
-
 type JanusRequest struct {
 	Janus      string `json:"janus"`
 	Transation string `json:"transaction"`
@@ -94,9 +93,11 @@ func (mus *MediaUsers) findByDisplay(display string) (MediaUser, bool) {
 	mu, err := mus.__mus[display]
 	return mu, err
 }
+
 func (mus *MediaUsers) update(mu MediaUser) {
 	mus.__mus[mu.Display] = mu
 }
+
 func (mus *MediaUsers) listenersOf(display string) ([]MediaUser) {
 	result := []MediaUser{}
 	for _, mediaUser := range mus.__mus {
@@ -112,6 +113,7 @@ func (mus *MediaUsers) listenersOf(display string) ([]MediaUser) {
 func (mus *MediaUsers) getAll() (map[string]MediaUser) {
 	return mus.__mus
 }
+
 func (mus *MediaUsers) count() (int) {
 	return len(mus.__mus)
 }
@@ -120,13 +122,10 @@ func recover() {
 	log.Println("getDocument failed, Janus server problaby donw")
 }
 
-
 func getDocument(mess string, path string) (r *http.Response, e error) {
 	// defer recover()
-
 	url := server + "/admin" + "/" + path
 	message := JanusRequest{Janus: mess, Transation: "123", Secret: "janusoverlord"}
-
 	if _debug == true { fmt.Println(url) }
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(message)
@@ -138,8 +137,6 @@ func getDocument(mess string, path string) (r *http.Response, e error) {
 	return res, nil
 }
 func JanusCapture() (MediaUsers) {
-
-	//defer recover()
 
 	publishers := MediaUsers{map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
@@ -235,10 +232,8 @@ func JanusCapture() (MediaUsers) {
 			}
 		}
 	}
-
 	return publishers
 }
-
 
 func testJanusCapture() {
 
