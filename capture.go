@@ -40,11 +40,14 @@ import (
 	"strconv"
 	"io/ioutil"
 	"strings"
+	"log"
 )
 
 const http_server = "http://media.raku.cloud:7088"
 const encrypted_server = "https://media.raku.cloud:7889"
 const server = encrypted_server
+var _debug = false
+
 
 type JanusRequest struct {
 	Janus      string `json:"janus"`
@@ -106,36 +109,66 @@ func (mus *MediaUsers) listenersOf(display string) ([]MediaUser) {
 	return result
 }
 
-func getDocument(mess string, path string) (r *http.Response) {
+func (mus *MediaUsers) getAll() (map[string]MediaUser) {
+	return mus.__mus
+}
+func (mus *MediaUsers) count() (int) {
+	return len(mus.__mus)
+}
+
+func recover() {
+	log.Println("getDocument failed, Janus server problaby donw")
+}
+
+
+func getDocument(mess string, path string) (r *http.Response, e error) {
+	// defer recover()
+
 	url := server + "/admin" + "/" + path
 	message := JanusRequest{Janus: mess, Transation: "123", Secret: "janusoverlord"}
 
-	fmt.Println(url)
+	if _debug == true { fmt.Println(url) }
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(message)
-	res, _ := http.Post(url, "application/json; charset=utf-8", b)
-	return res
+	res, err := http.Post(url, "application/json; charset=utf-8", b)
+	if (err != nil) {
+		log.Println("http.post returned error " + err.Error())
+		return nil,  err
+	}
+	return res, nil
 }
-func main() {
+func JanusCapture() (MediaUsers) {
+
+	//defer recover()
 
 	publishers := MediaUsers{map[string]MediaUser{}}
 	subscriptions := map[handleID]Subscription{}
 
 	var sessions JanusSessions
-	res := getDocument("list_sessions", "")
+	res, e := getDocument("list_sessions", "")
+	if e != nil {
+		return MediaUsers{}
+	}
 	err := json.NewDecoder(res.Body).Decode(&sessions)
 	if err != nil {
-		fmt.Println("err")
+		fmt.Println(err)
 	}
+
 	for i := 0; i < len(sessions.Sessions); i++ {
 		var handles JanusHandles
-		res := getDocument("list_handles", strconv.Itoa(sessions.Sessions[i]))
+		res, e := getDocument("list_handles", strconv.Itoa(sessions.Sessions[i]))
+		if e != nil {
+			return MediaUsers{}
+		}
 		err := json.NewDecoder(res.Body).Decode(&handles)
 		if err != nil {
-			fmt.Println("err")
+			fmt.Println(err)
 		}
 		for h := 0; h < len(handles.Handles); h++ {
-			res = getDocument("handle_info", strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]))
+			res, e = getDocument("handle_info", strconv.Itoa(sessions.Sessions[i])+"/"+strconv.Itoa(handles.Handles[h]))
+			if e != nil {
+				return MediaUsers{}
+			}
 			body, _ := ioutil.ReadAll(res.Body)
 			data := map[string]interface{}{}
 			dec := json.NewDecoder(strings.NewReader(string(body)))
@@ -147,7 +180,7 @@ func main() {
 				var aPublisher MediaUser
 				_, err := jq.Int("info", "streams", "0", "id")
 				if err != nil {
-					fmt.Println("no streams")
+					if _debug {fmt.Println("no publishers streams")}
 				} else {
 					// the publisher is broadcasting
 					_, ok := publishers.findByDisplay(display)
@@ -174,7 +207,7 @@ func main() {
 				_, err := jq.Int("info", "streams", "0", "id")
 				if err != nil {
 					// the listener is not listening
-					fmt.Println("no listening streams")
+					if _debug {fmt.Println("no listeners streams")}
 				} else {
 					_, ok := subscriptions[handle_id]
 					if ! ok {
@@ -191,7 +224,7 @@ func main() {
 			}
 		}
 	}
-	for _, user := range publishers.__mus {
+	for _, user := range publishers.getAll() {
 		for _, subby := range subscriptions {
 			if user.PrivateID == subby.PrivateID {
 				if (user.Subscriptions == nil) {
@@ -203,6 +236,14 @@ func main() {
 		}
 	}
 
+	return publishers
+}
+
+
+func testJanusCapture() {
+
+	publishers := JanusCapture()
+	fmt.Printf("count %d\n",  publishers.count() )
 	for _, user := range publishers.__mus {
 		fmt.Print("User: ")
 		fmt.Printf("Display %s ID %d PvtID %d  Session %d\n", user.Display, user.ID, user.PrivateID, user.SessionID)
@@ -221,4 +262,9 @@ func main() {
 		}
 		fmt.Println()
 	}
+}
+
+func main() {
+	_debug = true
+	testJanusCapture()
 }
